@@ -2,8 +2,8 @@
 
 namespace App\Traits;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 trait ResponseWrapper
 {
@@ -63,6 +63,22 @@ trait ResponseWrapper
         ];
 
         return response()->json($response, 401);
+    }
+
+    public function responsePaginated(LengthAwarePaginator $paginatedData, string $keyName, string $message = 'List Data', bool $success = true): JsonResponse
+    {
+        $response = [
+            'data' => [
+                $keyName => $paginatedData->items(),
+                'current_page' => $paginatedData->currentPage(),
+                'total_pages' => $paginatedData->lastPage(),
+                'total' => $paginatedData->total()
+            ],
+            'message' => $message,
+            'success' => $success,
+        ];
+
+        return response()->json($response, 200);
     }
 
 }
