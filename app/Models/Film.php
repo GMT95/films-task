@@ -23,4 +23,12 @@ class Film extends Model
                     ->withTimestamps();
     }
 
+    /*
+        Film can have many comments
+    */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class);
+    }
+
 }
