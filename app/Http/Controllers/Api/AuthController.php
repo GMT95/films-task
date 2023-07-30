@@ -12,8 +12,8 @@ class AuthController extends Controller
 {
     use ResponseWrapper;
 
-    public function register(Request $request) {
-
+    public function register(Request $request)
+    {
         $request->validate([
             "name" => "required|min:3",
             "email" => "required|email|unique:users",
@@ -26,12 +26,25 @@ class AuthController extends Controller
             "password" => bcrypt($request->password)
         ]);
 
-        /* TODO: Login User after creation */
+        $credentials = $request->only(['email', 'password']);
 
-        return $this->responseCreated([], "User with email: {$user->email} Created Successfully");
+        /* Login User after account creation */
+        $loginSuccess = auth()->attempt($credentials);
+
+        $token = $user->createToken("auth-token")->plainTextToken;
+
+        /* Redirect to Films on login success */
+        return $this->responseCreated(
+            [
+                "token" => $token,
+                "user" => $user,
+                "redirect_url" => $loginSuccess ? route("films.list.page") : route('register.page')
+            ],
+            "User with email: {$user->email} Created Successfully");
     }
 
-    public function login(Request $request) {
+    public function login(Request $request)
+    {
 
         $request->validate([
             "email" => "email|required",
@@ -40,15 +53,16 @@ class AuthController extends Controller
 
         $credentials = $request->only(['email', 'password']);
 
-        if(!auth()->attempt($credentials)) {
+        if (!auth()->attempt($credentials)) {
 
             return $this->responseInvalidPayload(
-            [
-                "password" => [
-                    "Invalid Credentials"
-                ]
-            ],
-            "The given data was invalid");
+                [
+                    "password" => [
+                        "Invalid Credentials"
+                    ]
+                ],
+                "The given data was invalid"
+            );
         }
 
         $user = User::query()->where("email", $request->email)->first();
