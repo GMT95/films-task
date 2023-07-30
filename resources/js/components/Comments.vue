@@ -28,6 +28,8 @@ export default {
     methods: {
         async addComment() {
             try {
+                this.processing = true;
+
                 const response = await axios.post(`/api/v1/films/${this.slug}/add-comment`, this.form)
 
                 const responseData = response.data.data;
@@ -43,11 +45,6 @@ export default {
                 });
 
             } catch (error) {
-                this.$notify({
-                    title: "Error",
-                    text: "Something went wrong",
-                    type: 'error'
-                });
                 if (error.response.status == 422) {
                     const { errors } = error.response.data.data
                     this.form.errors = errors
@@ -58,7 +55,10 @@ export default {
                         type: 'error'
                     });
                 }
+            } finally {
+                this.processing = false;
             }
+
         }
     }
 }
