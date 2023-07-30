@@ -39,7 +39,7 @@ export default {
     methods: {
         async addFilm() {
             try {
-                this.processing = true;
+                this.form.processing = true;
 
                 const response = await axios.post(`/api/v1/films`, this.form, {
                     headers: {
@@ -69,7 +69,7 @@ export default {
                     });
                 }
             } finally {
-                this.processing = false;
+                this.form.processing = false;
             }
         },
 

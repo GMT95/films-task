@@ -28,7 +28,7 @@ export default {
     methods: {
         async addComment() {
             try {
-                this.processing = true;
+                this.form.processing = true;
 
                 const response = await axios.post(`/api/v1/films/${this.slug}/add-comment`, this.form)
 
@@ -56,7 +56,7 @@ export default {
                     });
                 }
             } finally {
-                this.processing = false;
+                this.form.processing = false;
             }
 
         }
