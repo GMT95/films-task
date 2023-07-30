@@ -7,6 +7,7 @@ use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -42,7 +43,7 @@ class Handler extends ExceptionHandler
         }
 
         // For 404 Response
-        if ($e instanceof ModelNotFoundException && $request->wantsJson()) {
+        if (($e instanceof ModelNotFoundException || $e instanceof NotFoundHttpException) && $request->wantsJson()) {
             return $this->responseNotFound();
         }
 
