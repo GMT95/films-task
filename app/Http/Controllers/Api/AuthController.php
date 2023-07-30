@@ -57,7 +57,8 @@ class AuthController extends Controller
         return $this->responseOk(
             [
                 "token" => $token,
-                "user" => $user
+                "user" => $user,
+                "redirect_url" => route("films.list.page")
             ],
             "Login Successful"
         );

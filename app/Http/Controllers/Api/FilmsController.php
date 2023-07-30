@@ -38,7 +38,7 @@ class FilmsController extends Controller
     {
         $film->load([
             'genres:name',
-            'comments' => fn ($q) => $q->select('text', 'film_id', 'user_id', 'created_at')
+            'comments' => fn ($q) => $q->select('id', 'text', 'film_id', 'user_id', 'created_at')
                 ->latest()
                 ->limit(5),
             'comments.user:id,name'
