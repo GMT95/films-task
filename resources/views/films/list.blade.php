@@ -1,5 +1,5 @@
 @extends('layouts.master')
 
 @section('content')
-    <welcome></welcome>
+    <films-list></films-list>
 @endsection

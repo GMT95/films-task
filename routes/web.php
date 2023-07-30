@@ -14,5 +14,16 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('films.list.page');
 });
+
+Route::middleware('guest')->group(function() {
+    Route::view('/login', 'login')->name('login.page');
+
+    Route::view('/register', 'register')->name('register.page');
+});
+
+/* Below routes are not authenticated, user must be logged in only for adding comments */
+Route::view('/films', 'films.list')->name('films.list.page');
+Route::view('/films/{slug}', 'films.view')->name('films.view.page');
+
