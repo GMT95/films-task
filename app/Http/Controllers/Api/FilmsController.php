@@ -4,14 +4,16 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AddCommentRequest;
+use App\Http\Requests\FilmStoreRequest;
 use App\Models\Comment;
 use App\Models\Film;
+use App\Traits\ImageUpload;
 use App\Traits\ResponseWrapper;
 use Illuminate\Http\Request;
 
 class FilmsController extends Controller
 {
-    use ResponseWrapper;
+    use ResponseWrapper, ImageUpload;
 
     /**
      * Display a listing of the resource.
@@ -28,9 +30,19 @@ class FilmsController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(FilmStoreRequest $request)
     {
-        //
+        $uploadedImgPath = "/storage/" . $this->saveImage($request->photo);
+
+        $filmData = $request->except('genres');
+
+        $genreIds = $request->get('genres');
+
+        $film = Film::create([...$filmData, 'photo' => $uploadedImgPath]);
+
+        $film->genres()->sync($genreIds);
+
+        return $this->responseCreated($film, "Film Added Successfully");
     }
 
     /**

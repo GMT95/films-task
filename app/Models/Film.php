@@ -15,6 +15,8 @@ class Film extends Model
 {
     use HasFactory, HasUuids, SoftDeletes, GenerateSlug;
 
+    protected $guarded = ['id'];
+
     /* Use slug for route model binding */
     public function getRouteKeyName()
     {
@@ -45,11 +47,12 @@ class Film extends Model
         return $this->hasMany(Comment::class);
     }
 
-    /* Convert cents to dollars */
+    /* Convert cents to dollars when returning response & vice versa */
     protected function ticketPrice(): Attribute
     {
         return Attribute::make(
             get: fn (string $value) => $value / 100,
+            set: fn (string $value) => $value * 100,
         );
     }
 
