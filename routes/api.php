@@ -22,4 +22,6 @@ Route::group([
     'prefix' => 'v1'
 ], function () {
     Route::apiResource("films", FilmsController::class);
+    Route::middleware('auth:sanctum')
+        ->post("films/{film}/add-comment", [FilmsController::class, "addComment"]);
 });

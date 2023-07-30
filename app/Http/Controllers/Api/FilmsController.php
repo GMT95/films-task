@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AddCommentRequest;
+use App\Models\Comment;
 use App\Models\Film;
 use App\Traits\ResponseWrapper;
 use Illuminate\Http\Request;
@@ -61,5 +63,23 @@ class FilmsController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    /**
+     * Add Comment to film.
+     */
+    public function addComment(AddCommentRequest $request, Film $film)
+    {
+        $userId = auth()->user()->id;
+
+        $comment = Comment::create([
+            "film_id" => $film->id,
+            "user_id" => $userId,
+            "text" => $request->get("text")
+        ]);
+
+        $comment->load("user:id,name");
+
+        return $this->responseOk(compact('comment'), "Comment added successfully");
     }
 }

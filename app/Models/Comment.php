@@ -11,6 +11,8 @@ class Comment extends Model
 {
     use HasFactory, HasUuids;
 
+    protected $fillable = ['film_id', 'user_id', 'text'];
+
     /* Comment belongs to user */
     public function user(): BelongsTo
     {
