@@ -28,16 +28,35 @@ export default {
     methods: {
         async login() {
             try {
+                this.form.processing = true;
+
                 const response = await axios.post('/api/login', this.form)
 
                 const { redirect_url } = response.data.data;
 
+                this.$notify({
+                    title: "Success",
+                    text: response.data.message,
+                    type: 'success'
+                });
+
                 window.location.href = redirect_url;
-            } catch(error) {
-                if(error.response.status == 422) {
+
+            } catch (error) {
+
+                if (error.response.status == 422) {
                     const { errors } = error.response.data.data
                     this.form.errors = errors
+                } else {
+                    this.$notify({
+                        title: "Error",
+                        text: "Something went wrong",
+                        type: 'error'
+                    });
                 }
+
+            } finally {
+                this.form.processing = false;
             }
         }
     }
@@ -51,30 +70,17 @@ export default {
             <div>
                 <InputLabel for="email" value="Email" />
 
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    v-model="form.email"
-                    required
-                    autofocus
-                    autocomplete="username"
-                />
+                <TextInput id="email" type="email" class="mt-1 block w-full" v-model="form.email" required autofocus
+                    autocomplete="username" />
 
-                <InputError class="mt-2" v-if="form.errors.email"  :message="form.errors.email" />
+                <InputError class="mt-2" v-if="form.errors.email" :message="form.errors.email" />
             </div>
 
             <div class="mt-4">
                 <InputLabel for="password" value="Password" />
 
-                <TextInput
-                    id="password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    v-model="form.password"
-                    required
-                    autocomplete="current-password"
-                />
+                <TextInput id="password" type="password" class="mt-1 block w-full" v-model="form.password" required
+                    autocomplete="current-password" />
 
                 <InputError class="mt-2" v-if="form.errors.password" :message="form.errors.password" />
             </div>

@@ -17,7 +17,7 @@ export default {
             :src="film.photo" :alt="film.name" />
         <div class="flex flex-col justify-start p-6">
             <h5 class="text-gray-700 text-xl font-medium">
-                <a v-if="link" :href="`/films/${film.slug}`">
+                <a v-if="link" :href="`/films/${film.slug}`" class="hover:underline hover:text-indigo-500">
                     {{ film.name }} ({{ new Date(film.release_date).getFullYear() }})
                 </a>
                 <span v-else>
