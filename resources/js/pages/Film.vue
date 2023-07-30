@@ -27,7 +27,11 @@ export default {
         slug: {
             type: String,
             required: true
-        }
+        },
+        user: {
+            type: Object,
+            default: null
+        },
     },
     data() {
         return {
@@ -58,7 +62,12 @@ export default {
     <GuestLayout>
         <film-card v-if="film" :film="film"></film-card>
 
-        <comments v-if="film" :comments="film.comments"></comments>
+        <comments
+            v-if="film"
+            v-bind="user && {user}"
+            :comments="film.comments"
+            :slug="`${film.slug}`"
+        ></comments>
 
         <div class="text-center text-xl font-semibold text-rose-500" v-else-if="!processing && !film">
             Film Not found

@@ -6,6 +6,14 @@ export default {
             type: Object,
             required: true
         },
+        user: {
+            type: Object,
+            default: null
+        },
+        slug: {
+            type: String,
+            required: true
+        }
     },
     data() {
         return {
@@ -13,7 +21,43 @@ export default {
                 text: "",
                 errors: {
                 },
-                processing: true
+                processing: false
+            }
+        }
+    },
+    methods: {
+        async addComment() {
+            try {
+                const response = await axios.post(`/api/v1/films/${this.slug}/add-comment`, this.form)
+
+                const responseData = response.data.data;
+
+                this.comments.unshift(responseData.comment);
+
+                this.form.text = ""
+
+                this.$notify({
+                    title: "Success",
+                    text: response.data.message,
+                    type: 'success'
+                });
+
+            } catch (error) {
+                this.$notify({
+                    title: "Error",
+                    text: "Something went wrong",
+                    type: 'error'
+                });
+                if (error.response.status == 422) {
+                    const { errors } = error.response.data.data
+                    this.form.errors = errors
+                } else {
+                    this.$notify({
+                        title: "Error",
+                        text: "Something went wrong",
+                        type: 'error'
+                    });
+                }
             }
         }
     }
@@ -35,22 +79,29 @@ export default {
                 </p>
             </div>
 
-            <div class="flex-1 border rounded-lg px-4 py-2 sm:px-6 sm:py-4 leading-relaxed">
-                <form>
-                    <textarea
-                        class="form-input rounded border-gray-400 leading-normal resize-none w-full h-20 py-2 px-3 font-medium placeholder-gray-700 focus:outline-none focus:bg-white"
-                        placeholder="Type Your Comment" required></textarea>
+            <!-- Add comment form -->
+            <div v-if="user" class="flex-1 border rounded-lg px-4 py-2 sm:px-6 sm:py-4 leading-relaxed">
+                <form @submit.prevent="addComment">
+                    <TextInput id="text" type="text"
+                        class="form-input rounded border-gray-400 leading-normal resize-none w-full h-20 font-medium placeholder-gray-700 focus:outline-none focus:bg-white"
+                        v-model="form.text" placeholder="Type Your Comment" required />
 
-                    <InputError class="mt-2" v-if="form.errors.password" :message="form.errors.password" />
+                    <InputError class="mt-2" v-if="form.errors.text" :message="form.errors.text" />
 
-                    <PrimaryButton
-                        :class="`mt-4 bg-blue-600 ${form.processing ? 'opacity-50 pointer-events-none' : ''}`"
-                        :disabled="form.processing"
-                    >
+                    <PrimaryButton :class="`mt-4 bg-blue-600 ${form.processing ? 'opacity-50 pointer-events-none' : ''}`"
+                        :disabled="form.processing">
                         Post Comment
                     </PrimaryButton>
                 </form>
             </div>
+            <div v-else class="flex-1 text-center border rounded-lg px-4 py-2 sm:px-6 sm:py-4 leading-relaxed">
+                <PrimaryButton class="mt-4 bg-blue-600">
+                    <a href="/login">
+                        Login to Comment
+                    </a>
+                </PrimaryButton>
+            </div>
+            <!-- Add comment form -->
 
         </div>
     </div>
