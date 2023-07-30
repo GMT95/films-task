@@ -6,9 +6,6 @@ import TextInput from '@/components/TextInput.vue';
 import GuestLayout from '@/layouts/GuestLayout.vue';
 
 export default {
-    // mounted() {
-    //     console.log("component mounted")
-    // },
     components: {
         InputError,
         InputLabel,
@@ -29,24 +26,51 @@ export default {
             }
         }
     },
+    methods: {
+        async register() {
+            try {
+                this.form.processing = true;
+
+                const response = await axios.post('/api/register', this.form)
+
+                const { redirect_url } = response.data.data;
+
+                this.$notify({
+                    title: "Success",
+                    text: response.data.message,
+                    type: 'success'
+                });
+
+                window.location.href = redirect_url;
+            } catch (error) {
+
+                if (error.response.status == 422) {
+                    const { errors } = error.response.data.data
+                    this.form.errors = errors
+                } else {
+                    this.$notify({
+                        title: "Error",
+                        text: "Something went wrong",
+                        type: 'error'
+                    });
+                }
+
+            } finally {
+                this.form.processing = false;
+            }
+        }
+    }
 }
 </script>
 
 <template>
     <GuestLayout>
-        <form>
+        <form @submit.prevent="register">
             <div>
                 <InputLabel for="name" value="Name" />
 
-                <TextInput
-                    id="name"
-                    type="text"
-                    class="mt-1 block w-full"
-                    v-model="form.name"
-                    required
-                    autofocus
-                    autocomplete="name"
-                />
+                <TextInput id="name" type="text" class="mt-1 block w-full" v-model="form.name" required autofocus
+                    autocomplete="name" />
 
                 <InputError class="mt-2" v-if="form.errors.name" :message="form.errors.name" />
             </div>
@@ -75,13 +99,14 @@ export default {
                 <TextInput id="password_confirmation" type="password" class="mt-1 block w-full"
                     v-model="form.password_confirmation" required autocomplete="new-password" />
 
-                <InputError class="mt-2" v-if="form.errors.password_confirmation" :message="form.errors.password_confirmation" />
+                <InputError class="mt-2" v-if="form.errors.password_confirmation"
+                    :message="form.errors.password_confirmation" />
             </div>
 
             <div class="flex items-center justify-end mt-4">
                 <a href="/login"
                     class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                Already registered?
+                    Already registered?
                 </a>
 
                 <PrimaryButton class="ml-4" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
