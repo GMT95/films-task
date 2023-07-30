@@ -77,4 +77,14 @@ class AuthController extends Controller
             "Login Successful"
         );
     }
+
+    public function logout() {
+        $user = auth()->user();
+
+        $user->tokens()->delete();
+
+        return $this->responseOk([
+            "redirect_url" => route("login.page")
+        ], "User logged out");
+    }
 }
