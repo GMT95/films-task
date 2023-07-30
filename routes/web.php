@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuthController as WebAuthController;
 use App\Models\Genre;
 use Illuminate\Support\Facades\Route;
 
@@ -18,11 +19,10 @@ Route::get('/', function () {
     return redirect()->route('films.list.page');
 });
 
-Route::middleware('guest')->group(function() {
-    Route::view('/login', 'login')->name('login.page');
-
-    Route::view('/register', 'register')->name('register.page');
-});
+/* Web Auth Routes */
+Route::get('/login', [WebAuthController::class, 'getLoginPage'])->name('login.page');
+Route::get('/register', [WebAuthController::class, 'getRegisterPage'])->name('register.page');
+Route::get('/logout', [WebAuthController::class, 'webLogout'])->name('logout.web');
 
 /* Below routes are not authenticated, user must be logged in only for adding comments */
 Route::view('/films', 'films.list')->name('films.list.page');
