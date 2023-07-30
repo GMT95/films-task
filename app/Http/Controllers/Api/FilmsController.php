@@ -64,7 +64,7 @@ class FilmsController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Film $film)
     {
         //
     }
@@ -72,9 +72,11 @@ class FilmsController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Film $film)
     {
-        //
+        $film->delete();
+
+        return $this->responseOk(['film_id' => $film->id], "Film deleted successfully");
     }
 
     /**
