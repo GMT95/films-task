@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AddCommentRequest;
 use App\Http\Requests\FilmStoreRequest;
+use App\Http\Requests\FilmUpdateRequest;
 use App\Models\Comment;
 use App\Models\Film;
 use App\Traits\ImageUpload;
@@ -64,9 +65,25 @@ class FilmsController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Film $film)
+    public function update(FilmUpdateRequest $request, Film $film)
     {
-        //
+        $validatedData = $request->validated();
+
+        if($request->has('photo')) {
+            $uploadedImgPath = "/storage/" . $this->saveImage($request->photo);
+
+            $validatedData['photo'] = $uploadedImgPath;
+        }
+
+        if($request->has('genres')) {
+            $genreIds = $request->get('genres');
+
+            $film->genres()->sync($genreIds);
+        }
+
+        $film->update([...$validatedData]);
+
+        return $this->responseOk($film, "Film Updated Successfully");
     }
 
     /**
