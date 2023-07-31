@@ -67,7 +67,25 @@ class AuthenticationTest extends TestCase
         $response->assertStatus(422);
     }
 
-    public function test_user_can_logout()
+    public function test_user_can_logout_from_web()
+    {
+        $user = User::factory()->create();
+
+        Sanctum::actingAs($user, ['*']);
+
+        $response = $this->json('GET', route('logout.web'));
+
+        $this->assertDatabaseMissing('personal_access_tokens', [
+            'tokenable_id' => $user->id,
+            'name' => 'auth-token',
+        ]);
+
+        $this->assertGuest('web');
+
+        $response->assertRedirect(route('login.page'));
+    }
+
+    public function test_user_can_logout_from_api()
     {
         $user = User::factory()->create();
 
