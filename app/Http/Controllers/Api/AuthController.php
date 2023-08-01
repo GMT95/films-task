@@ -3,85 +3,60 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Http\Requests\LoginUserRequest;
+use App\Http\Requests\RegisterUserRequest;
+use App\Services\Interfaces\AuthServiceInterface;
 use App\Traits\ResponseWrapper;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rules\Password;
+
 
 class AuthController extends Controller
 {
     use ResponseWrapper;
 
-    public function register(Request $request)
+    public function __construct(protected AuthServiceInterface $authService)
     {
-        $request->validate([
-            "name" => "required|min:3",
-            "email" => "required|email|unique:users",
-            "password" => ["required", "confirmed", Password::min(8)->mixedCase()]
-        ]);
+    }
 
-        $user = User::create([
-            "name" => $request->name,
-            "email" => $request->email,
-            "password" => bcrypt($request->password)
-        ]);
+    public function register(RegisterUserRequest $request)
+    {
 
-        $credentials = $request->only(['email', 'password']);
+        $registerResponse = $this->authService->register($request);
 
-        /* Login User after account creation */
-        $loginSuccess = auth()->attempt($credentials);
-
-        $token = $user->createToken("auth-token")->plainTextToken;
+        $user = $registerResponse['user'];
 
         /* Redirect to Films on login success */
         return $this->responseCreated(
             [
-                "token" => $token,
+                "token" => $registerResponse['token'],
                 "user" => $user,
-                "redirect_url" => $loginSuccess ? route("films.list.page") : route('register.page')
+                "redirect_url" => $registerResponse['loginSuccess'] ? route("films.list.page") : route('register.page')
             ],
-            "User with email: {$user->email} Created Successfully");
+            "User with email: {$user->email} Created Successfully"
+        );
     }
 
-    public function login(Request $request)
+    public function login(LoginUserRequest $request)
     {
+        $loginResponse = $this->authService->login($request);
+        $loginError = $loginResponse['error'];
 
-        $request->validate([
-            "email" => "email|required",
-            "password" => "required"
-        ]);
-
-        $credentials = $request->only(['email', 'password']);
-
-        if (!auth()->attempt($credentials)) {
-
-            return $this->responseInvalidPayload(
-                [
-                    "password" => [
-                        "Invalid Credentials"
-                    ]
-                ],
-                "The given data was invalid"
-            );
+        if(isset($loginError)) {
+            return $this->responseInvalidPayload($loginError['body'], $loginError['msg']);
         }
-
-        $user = User::query()->where("email", $request->email)->first();
-        $token = $user->createToken("auth-token")->plainTextToken;
 
         return $this->responseOk(
             [
-                "token" => $token,
-                "user" => $user,
+                "token" => $loginResponse['token'],
+                "user" => $loginResponse['user'],
                 "redirect_url" => route("films.list.page")
             ],
             "Login Successful"
         );
     }
 
-    public function logout() {
-        $user = auth()->user();
-
-        $user->tokens()->delete();
+    public function logout()
+    {
+        $this->authService->logout();
 
         return $this->responseOk([
             "redirect_url" => route("login.page")
