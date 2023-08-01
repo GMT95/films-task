@@ -6,24 +6,24 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\AddCommentRequest;
 use App\Http\Requests\FilmStoreRequest;
 use App\Http\Requests\FilmUpdateRequest;
-use App\Models\Comment;
 use App\Models\Film;
-use App\Traits\ImageUpload;
 use App\Traits\ResponseWrapper;
-use Illuminate\Http\Request;
+use App\Services\Interfaces\FilmsServiceInterface;
 
 class FilmsController extends Controller
 {
-    use ResponseWrapper, ImageUpload;
+    use ResponseWrapper;
+
+    public function __construct(protected FilmsServiceInterface $filmsService)
+    {
+    }
 
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $filmsPaginated = Film::query()
-            ->with(['genres' => fn ($q) => $q->select('name')])
-            ->paginate(1);
+        $filmsPaginated = $this->filmsService->index();
 
         return $this->responsePaginated($filmsPaginated, 'films', 'Films List Data');
     }
@@ -33,15 +33,7 @@ class FilmsController extends Controller
      */
     public function store(FilmStoreRequest $request)
     {
-        $uploadedImgPath = "/storage/" . $this->saveImage($request->photo);
-
-        $filmData = $request->except('genres');
-
-        $genreIds = $request->get('genres');
-
-        $film = Film::create([...$filmData, 'photo' => $uploadedImgPath]);
-
-        $film->genres()->sync($genreIds);
+        $film = $this->filmsService->store($request);
 
         return $this->responseCreated($film, "Film Added Successfully");
     }
@@ -51,13 +43,7 @@ class FilmsController extends Controller
      */
     public function show(Film $film)
     {
-        $film->load([
-            'genres:name',
-            'comments' => fn ($q) => $q->select('id', 'text', 'film_id', 'user_id', 'created_at')
-                ->latest()
-                ->limit(5),
-            'comments.user:id,name'
-        ]);
+        $film = $this->filmsService->show($film);
 
         return $this->responseOk(compact('film'), "Film data");
     }
@@ -67,21 +53,7 @@ class FilmsController extends Controller
      */
     public function update(FilmUpdateRequest $request, Film $film)
     {
-        $validatedData = $request->validated();
-
-        if($request->has('photo')) {
-            $uploadedImgPath = "/storage/" . $this->saveImage($request->photo);
-
-            $validatedData['photo'] = $uploadedImgPath;
-        }
-
-        if($request->has('genres')) {
-            $genreIds = $request->get('genres');
-
-            $film->genres()->sync($genreIds);
-        }
-
-        $film->update([...$validatedData]);
+        $film = $this->filmsService->update($request, $film);
 
         return $this->responseOk($film, "Film Updated Successfully");
     }
@@ -91,9 +63,9 @@ class FilmsController extends Controller
      */
     public function destroy(Film $film)
     {
-        $film->delete();
+        $filmId = $this->filmsService->destroy($film);
 
-        return $this->responseOk(['film_id' => $film->id], "Film deleted successfully");
+        return $this->responseOk(['film_id' => $filmId], "Film deleted successfully");
     }
 
     /**
@@ -101,15 +73,7 @@ class FilmsController extends Controller
      */
     public function addComment(AddCommentRequest $request, Film $film)
     {
-        $userId = auth()->user()->id;
-
-        $comment = Comment::create([
-            "film_id" => $film->id,
-            "user_id" => $userId,
-            "text" => $request->get("text")
-        ]);
-
-        $comment->load("user:id,name");
+        $comment = $this->filmsService->addComment($request, $film);
 
         return $this->responseOk(compact('comment'), "Comment added successfully");
     }
